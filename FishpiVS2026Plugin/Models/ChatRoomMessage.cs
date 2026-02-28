@@ -87,5 +87,9 @@ namespace FishpiVS2026Plugin.Models
         /// </summary>
         [JsonPropertyName("userAvatarURL48")]
         public string UserAvatarURL48 { get; set; }
-    }
+
+        [JsonIgnore]
+        public bool IsSelf { get; set; } = false;
+
+	}
 }

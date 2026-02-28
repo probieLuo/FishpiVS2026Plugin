@@ -16,9 +16,8 @@ namespace FishpiVS2026Plugin.Helpers
         private Timer _heartbeatTimer; // 心跳定时器（3分钟一次）
         private readonly int _reconnectDelayMs = 5000; // 重连延迟（5秒）
 
-        public event Action<ChatRoomMessage> OnMessageReceived; // 外部订阅事件：收到JSON消息
+        public event Action<ChatRoomMessage> OnMessageReceived; 
 
-        // 构造函数：传入WSS地址和apiKey
         public ChatRoomClient(string domain, string apiKey)
         {
             _wssUrl = $"wss://{domain}/chat-room-channel?apiKey={apiKey}";
@@ -75,7 +74,6 @@ namespace FishpiVS2026Plugin.Helpers
                     // Message：收到JSON消息
                     string jsonMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
                     Console.WriteLine($"=== Message：收到原始JSON → {jsonMessage} ===");
-                    HandleReceivedJsonMessage(jsonMessage);
 
                     try
                     {
@@ -83,7 +81,6 @@ namespace FishpiVS2026Plugin.Helpers
                         ChatRoomMessage message = JsonSerializer.Deserialize<ChatRoomMessage>(jsonMessage);
                         Console.WriteLine($"JSON解析结果 → 类型：{message.Type}，内容：{message.Content}，时间：{message.Time}");
 
-                        // 业务
                         OnMessageReceived?.Invoke(message);
                     }
                     catch (JsonException ex)
@@ -144,22 +141,6 @@ namespace FishpiVS2026Plugin.Helpers
             catch (Exception ex)
             {
                 Console.WriteLine($"心跳发送异常：{ex.Message}");
-            }
-        }
-
-        private void HandleReceivedJsonMessage(string jsonString)
-        {
-            try
-            {
-                // 反序列化
-                ChatRoomMessage message = JsonSerializer.Deserialize<ChatRoomMessage>(jsonString);
-                Console.WriteLine($"JSON解析结果 → 类型：{message.Type}，内容：{message.Content}，时间：{message.Time}");
-
-                // 业务
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"JSON反序列化失败：{ex.Message}，原始内容：{jsonString}");
             }
         }
 
