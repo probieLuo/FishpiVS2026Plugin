@@ -25,6 +25,8 @@ namespace FishpiVS2026Plugin.ViewModels
         }
 
         private string _sendContent = "";
+		private int messagesMax=10000;
+
 		public string SendContent
 		{
 			get => _sendContent;
@@ -45,12 +47,16 @@ namespace FishpiVS2026Plugin.ViewModels
 			roomClient = new ChatRoomClient(domain, apikey);
             roomClient.OnMessageReceived += (message) =>
             {
-                // 在UI线程上更新Messages集合
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                if (Messages.Count > messagesMax)
                 {
-                    Messages.Add(message);
-                });
-            };
+					Messages.RemoveAt(0);
+
+				}
+				System.Windows.Application.Current.Dispatcher.Invoke(() =>
+				{
+					Messages.Add(message);
+				});
+			};
         }
 
 		private async Task OnSendAsync()
