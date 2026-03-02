@@ -20,7 +20,7 @@ namespace FishpiVS2026Plugin.Helpers
 
         public ChatRoomClient(string domain, string apiKey)
         {
-            _wssUrl = $"wss://{domain}/chat-room-channel?apiKey={apiKey}";
+            _wssUrl = $"{domain}/chat-room-channel?apiKey={apiKey}";
         }
 
         public async Task StartAsync()
@@ -156,6 +156,11 @@ namespace FishpiVS2026Plugin.Helpers
             }
             _cts?.Cancel();
             _cts?.Dispose();
+        }
+
+        public async Task StopAsync()
+        {
+            StopHeartbeatTimer();
         }
     }
 }

@@ -2,11 +2,15 @@
 using CommunityToolkit.Mvvm.Input;
 using FishpiVS2026Plugin.Helpers;
 using FishpiVS2026Plugin.Models;
+using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Settings;
 using System;
 using System.Collections.ObjectModel;
+using System.Runtime;
 using System.Threading.Tasks;
-using System.Web.UI.WebControls;
-using System.Windows.Input;
+using System.Windows;
+using System.Windows.Forms;
 
 namespace FishpiVS2026Plugin.ViewModels
 {
@@ -14,9 +18,8 @@ namespace FishpiVS2026Plugin.ViewModels
     {
         private ChatRoomClient roomClient;
         private HttpRestClient httpRestClient;
-		private readonly string domain = "rhyus-chengdu.fishpi.cn:10832";
-        private readonly string apikey = "a52b920d8994a75a6791735191d68c53c027cf1d3897aa3ee19230faf464711523fc876a05830a4baef01c78fca2173995225ceee03738296be97e3eb61b3cf409c9fcb1cccdf415911e9f0c6956f335513afd8f6808b5c85fc8c0dab5d1fcdb";
-
+        private int messagesMax = 10000;
+        private const string CollectionName = "FishpiVS2026Plugin";
         private ObservableCollection<ChatRoomMessage> _messages = new ObservableCollection<ChatRoomMessage>();
         public ObservableCollection<ChatRoomMessage> Messages
         {
@@ -25,7 +28,6 @@ namespace FishpiVS2026Plugin.ViewModels
         }
 
         private string _sendContent = "";
-		private int messagesMax=10000;
 
 		public string SendContent
 		{
@@ -33,37 +35,114 @@ namespace FishpiVS2026Plugin.ViewModels
 			set => SetProperty(ref _sendContent, value); 
 		}
 
-		public IAsyncRelayCommand OnLoadedCommand { get; }
+        private string _apikey = "";
+
+        public string Apikey
+        {
+            get => _apikey;
+            set => SetProperty(ref _apikey, value);
+        }
+
+        private string _domain = "";
+
+        public string Domain
+        {
+            get => _domain;
+            set => SetProperty(ref _domain, value);
+        }
+
+        private Visibility _chatViewVisibility = Visibility.Visible;
+
+        public Visibility ChatViewVisibility
+        {
+            get => _chatViewVisibility;
+            set => SetProperty(ref _chatViewVisibility, value);
+        }
+
+        private Visibility _settingsViewVisibility = Visibility.Hidden;
+
+        public Visibility SettingsViewVisibility
+        {
+            get => _settingsViewVisibility;
+            set => SetProperty(ref _settingsViewVisibility, value);
+        }
+
+        public IAsyncRelayCommand OnLoadedCommand { get; }
 
         public IAsyncRelayCommand OnSendCommand { get; }
 
+        public RelayCommand OnSettingsCommand { get; }
 
-		public ChatRoomViewModel()
+        public IAsyncRelayCommand OnSaveSettingsCommand { get; }
+
+        public ChatRoomViewModel()
         {
             OnLoadedCommand = new AsyncRelayCommand(OnLoadedAsync);
             OnSendCommand = new AsyncRelayCommand(OnSendAsync);
-
-            httpRestClient = new HttpRestClient("https://fishpi.cn/");
-			roomClient = new ChatRoomClient(domain, apikey);
-            roomClient.OnMessageReceived += (message) =>
-            {
-                if (Messages.Count > messagesMax)
-                {
-					Messages.RemoveAt(0);
-
-				}
-				System.Windows.Application.Current.Dispatcher.Invoke(() =>
-				{
-					Messages.Add(message);
-				});
-			};
+            OnSettingsCommand = new RelayCommand(OnSettings);
+            OnSaveSettingsCommand = new AsyncRelayCommand(OnSaveSettingsAsync);
         }
 
-		private async Task OnSendAsync()
+        private void LoadSettings()
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            // 获取VS的设置存储
+            var settingsManager = new ShellSettingsManager(ServiceProvider.GlobalProvider);
+            var userSettingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
+
+            // 创建配置集合（如果不存在）
+            if (!userSettingsStore.CollectionExists(CollectionName))
+            {
+                userSettingsStore.CreateCollection(CollectionName);
+            }
+            Domain = userSettingsStore.GetString(CollectionName, "Domain","");
+            Apikey = userSettingsStore.GetString(CollectionName, "Apikey","");
+        }
+
+        private async Task OnSaveSettingsAsync()
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var settingsManager = new ShellSettingsManager(ServiceProvider.GlobalProvider);
+            var userSettingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
+
+            userSettingsStore.SetString(CollectionName, "Domain", Domain);
+            userSettingsStore.SetString(CollectionName, "Apikey", Apikey);
+
+            // 更新客户端配置
+            if(roomClient!= null)
+            {
+                await roomClient.StopAsync();
+                roomClient.OnMessageReceived -= RoomClient_OnMessageReceived;
+            }
+            roomClient = new ChatRoomClient(Domain, Apikey);
+            roomClient.OnMessageReceived += RoomClient_OnMessageReceived;
+            _ = roomClient.StartAsync();
+
+            ChatViewVisibility = Visibility.Visible;
+            SettingsViewVisibility = Visibility.Hidden;
+        }
+
+        private void OnSettings()
+        {
+            if (ChatViewVisibility == Visibility.Visible)
+            {
+                ChatViewVisibility = Visibility.Hidden;
+                SettingsViewVisibility = Visibility.Visible;
+            }
+            else
+            {
+                ChatViewVisibility = Visibility.Visible;
+                SettingsViewVisibility = Visibility.Hidden;
+            }
+        }
+
+        private async Task OnSendAsync()
 		{
             ChatRoomSendMessage msg = new ChatRoomSendMessage
             {
-                ApiKey = apikey,
+                ApiKey = Apikey,
                 Client = "Other",
                 Content = SendContent
             };
@@ -73,7 +152,26 @@ namespace FishpiVS2026Plugin.ViewModels
 
 		private async Task OnLoadedAsync()
         {
+            LoadSettings();
+
+            httpRestClient = new HttpRestClient("https://fishpi.cn/");
+            roomClient = new ChatRoomClient(Domain, Apikey);
+            roomClient.OnMessageReceived += RoomClient_OnMessageReceived; ;
+
             await roomClient.StartAsync();
+        }
+
+        private void RoomClient_OnMessageReceived(ChatRoomMessage message)
+        {
+            if (Messages.Count > messagesMax)
+            {
+                Messages.RemoveAt(0);
+
+            }
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                Messages.Add(message);
+            });
         }
     }
 }
