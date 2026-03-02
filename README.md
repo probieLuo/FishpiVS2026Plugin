@@ -25,7 +25,7 @@
 
 ![在扩展中填写 node 与 apikey](image-1.png)
 
-**后续更新**
+**Todo**
 
 - [ ] 聊天室消息引用回复，目前还没搞懂是怎么引用的，貌似是在content或者md里面？
 - [ ] markdown支持，大工程！因为目前wpf没有很好的支持markdown的包，有一个Markdig新出的，不过还没用过
