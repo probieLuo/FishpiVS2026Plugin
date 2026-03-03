@@ -46,6 +46,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Converters\BoolToHorizontalAlignmentConverter.cs" />
+    <Compile Include="Helpers\AutoScrollBehavior.cs" />
     <Compile Include="Helpers\ChatRoomClient.cs" />
     <Compile Include="Helpers\HttpRestClient.cs" />
     <Compile Include="Helpers\LoadedCommandBehavior.cs" />

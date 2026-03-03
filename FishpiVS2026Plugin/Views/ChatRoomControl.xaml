@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:cvt="clr-namespace:FishpiVS2026Plugin.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="clr-namespace:FishpiVS2026Plugin.Helpers"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:local="clr-namespace:FishpiVS2026Plugin"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -47,6 +48,8 @@
             Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}">
             <Menu materialDesign:MenuAssist.TopLevelMenuItemHeight="25" Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}">
                 <MenuItem Command="{Binding OnSettingsCommand}" Header="set" />
+                <Separator />
+                <MenuItem Command="{Binding OnSettingsCommand}" Header="myue" />
             </Menu>
         </materialDesign:Card>
 
@@ -54,6 +57,7 @@
         <ListView
             x:Name="ChatListView"
             Grid.Row="1"
+            helpers:AutoScrollBehavior.SmartAutoScroll="True"
             Background="Transparent"
             BorderThickness="0"
             Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
@@ -61,6 +65,12 @@
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ScrollViewer.VerticalScrollBarVisibility="Auto"
             Visibility="{Binding ChatViewVisibility}">
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="引用" />
+                    <MenuItem Header="复制消息" />
+                </ContextMenu>
+            </ListView.ContextMenu>
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <!--  虚拟化面板  -->
@@ -71,22 +81,22 @@
             <!--  自定义消息项模板  -->
             <ListView.ItemTemplate>
                 <DataTemplate DataType="{x:Type models:ChatRoomMessage}">
-                    <Grid Margin="5" HorizontalAlignment="{Binding IsSelf, Converter={StaticResource BoolToHorizontalAlignmentConverter}}">
+                    <Grid Margin="0" HorizontalAlignment="{Binding IsSelf, Converter={StaticResource BoolToHorizontalAlignmentConverter}}">
+
                         <StackPanel Margin="5,0,0,0">
-                            <!--  昵称  -->
-                            <TextBlock
-                                FontSize="14"
-                                FontWeight="Bold"
-                                Text="{Binding UserNickname}" />
+                            <TextBlock FontSize="12" FontWeight="Bold">
+                                <Run Text="{Binding UserNickname}" />
+                                <Run Text="(" />
+                                <Run Text="{Binding UserName}" />
+                                <Run Text=")" />
+                                <Run Text=" " />
+                                <Run FontSize="10" Text="{Binding Time}" />
+                            </TextBlock>
 
                             <TextBlock
-                                Margin="0,5,0,5"
                                 FontSize="12"
                                 Text="{Binding Md}"
                                 TextWrapping="Wrap" />
-
-                            <!--  时间  -->
-                            <TextBlock FontSize="10" Text="{Binding Time}" />
                         </StackPanel>
                     </Grid>
                 </DataTemplate>

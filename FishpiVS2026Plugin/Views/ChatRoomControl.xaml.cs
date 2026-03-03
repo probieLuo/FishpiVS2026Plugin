@@ -52,7 +52,7 @@ namespace FishpiVS2026Plugin.Views
             var viewModel = new ChatRoomViewModel();
             this.DataContext = viewModel;
 
-			viewModel.Messages.CollectionChanged += Messages_CollectionChanged;
+			//viewModel.Messages.CollectionChanged += Messages_CollectionChanged;
 
 		}
 
