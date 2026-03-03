@@ -78,7 +78,7 @@ namespace FishpiVS2026Plugin.ViewModels
         public ChatRoomViewModel()
         {
             OnLoadedCommand = new AsyncRelayCommand(OnLoadedAsync);
-            OnSendCommand = new AsyncRelayCommand(OnSendAsync);
+			OnSendCommand = new AsyncRelayCommand(OnSendAsync);
             OnSettingsCommand = new RelayCommand(OnSettings);
             OnSaveSettingsCommand = new AsyncRelayCommand(OnSaveSettingsAsync);
         }
