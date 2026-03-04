@@ -13,6 +13,7 @@ namespace FishpiVS2026Plugin.Views
     /// </summary>
     public partial class ChatRoomControl : UserControl
     {
+		public ChatRoomViewModel ViewModel { get; private set; }
         /// <summary>
         /// Initializes a new instance of the <see cref="ChatRoomControl"/> class.
         /// </summary>
@@ -49,8 +50,8 @@ namespace FishpiVS2026Plugin.Views
 			}
 
 			this.InitializeComponent();
-            var viewModel = new ChatRoomViewModel();
-            this.DataContext = viewModel;
+            ViewModel = new ChatRoomViewModel();
+            this.DataContext = ViewModel;
 
 			//viewModel.Messages.CollectionChanged += Messages_CollectionChanged;
 
@@ -82,6 +83,12 @@ namespace FishpiVS2026Plugin.Views
             MessageBox.Show(
                 string.Format(System.Globalization.CultureInfo.CurrentUICulture, "Invoked '{0}'", this.ToString()),
                 "ChatRoom");
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+			ReleaseDialogHost.IsOpen = false;
+            ViewModel.OnPublishBreezemoonCommand.Execute(null);
         }
     }
 }

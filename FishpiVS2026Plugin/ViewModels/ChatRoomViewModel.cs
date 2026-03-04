@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Settings;
 using RestSharp;
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
@@ -65,6 +66,14 @@ namespace FishpiVS2026Plugin.ViewModels
 			set => SetProperty(ref _sendContent, value); 
 		}
 
+        private string _publishBreezemoon = "";
+
+        public string PublishBreezemoon
+        {
+            get => _publishBreezemoon;
+            set => SetProperty(ref _publishBreezemoon, value);
+        }
+        
         private string _apikey = "";
 
         public string Apikey
@@ -120,7 +129,10 @@ namespace FishpiVS2026Plugin.ViewModels
         public RelayCommand OnOpenRefCommand { get; }
 
         public RelayCommand OnCopyMsgCommand { get; }
-        
+
+        public IAsyncRelayCommand OnRefreshBreezemoonsCommand { get; }
+
+        public IAsyncRelayCommand OnPublishBreezemoonCommand { get; }
 
         public ChatRoomViewModel()
         {
@@ -138,6 +150,39 @@ namespace FishpiVS2026Plugin.ViewModels
                     System.Windows.Clipboard.SetText(SelectedMessage.Md);
                 }
             });
+            OnRefreshBreezemoonsCommand = new AsyncRelayCommand(OnRefreshBreezemoonsAsync);
+            OnPublishBreezemoonCommand = new AsyncRelayCommand(OnPublishBreezemoonAsync);
+        }
+
+        private async Task OnPublishBreezemoonAsync()
+        {
+            BreezemoonRequest msg = new BreezemoonRequest
+            {
+                ApiKey = Apikey,
+                BreezemoonContent = PublishBreezemoon
+            };
+            var response = await httpRestClient.PostAsync<BreezemoonRootResponse>("breezemoon", msg);
+            await OnRefreshBreezemoonsAsync();
+            PublishBreezemoon = "";
+        }
+
+        private async Task OnRefreshBreezemoonsAsync()
+        {
+            Breezemoons.Clear();
+            Parameter[] parameters =
+            {
+                Parameter.CreateParameter("p",1, ParameterType.QueryString),
+                Parameter.CreateParameter("size",50, ParameterType.QueryString),
+            };
+
+            var response = await httpRestClient.GetAsync<BreezemoonRootResponse>("api/breezemoons", parameters);
+            if (response != null && response.IsSuccessful && response.Data != null)
+            {
+                foreach (var item in response.Data.Breezemoons)
+                {
+                    Breezemoons.Add(item);
+                }
+            }
         }
 
         private void OnOpenRef()
@@ -260,21 +305,7 @@ namespace FishpiVS2026Plugin.ViewModels
 
         private async Task OnOpenEditAsync()
         {
-            Breezemoons.Clear();
-            Parameter[] parameters =
-            {
-                Parameter.CreateParameter("p",1, ParameterType.QueryString),
-                Parameter.CreateParameter("size",50, ParameterType.QueryString),
-            };
-
-            var response = await httpRestClient.GetAsync<BreezemoonRootResponse>("api/breezemoons", parameters);
-            if (response != null && response.IsSuccessful && response.Data != null)
-            {
-                foreach (var item in response.Data.Breezemoons)
-                {
-                    Breezemoons.Add(item);
-                }
-            }
+            
         }
 
         private void RoomClient_OnMessageReceived(ChatRoomMessage message)

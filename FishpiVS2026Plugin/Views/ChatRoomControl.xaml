@@ -138,7 +138,7 @@
             </TabItem>
 
             <TabItem Header="release">
-                <materialDesign:DialogHost>
+                <materialDesign:DialogHost x:Name="ReleaseDialogHost">
                     <materialDesign:DialogHost.DialogContent>
                         <Border Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}">
                             <StackPanel Margin="10">
@@ -147,11 +147,12 @@
                                     Height="200"
                                     Margin="0,8,0,0"
                                     Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+                                    Text="{Binding PublishBreezemoon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     TextWrapping="Wrap" />
                                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                     <Button
                                         Margin="0,8,8,0"
-                                        Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                                        Click="Button_Click"
                                         Content="发布"
                                         IsDefault="True"
                                         Style="{StaticResource MaterialDesignFlatButton}">
@@ -182,7 +183,7 @@
                         <Grid>
                             <ListView
                                 x:Name="BreezemoonsListView"
-                                helpers:AutoScrollBehavior.SmartAutoScroll="True"
+                                helpers:AutoScrollBehavior.SmartAutoScroll="False"
                                 Background="Transparent"
                                 BorderThickness="1"
                                 Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
@@ -228,17 +229,27 @@
                                 </ListView.ItemTemplate>
                             </ListView>
 
-                            <Button
-                                Grid.Row="0"
+                            <StackPanel
                                 Margin="40"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Bottom"
-                                Background="Transparent"
-                                Command="{x:Static materialDesign:DialogHost.OpenDialogCommand}"
-                                Content="{materialDesign:PackIcon Kind=Plus,
-                                                                  Size=22}"
-                                Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
-                                Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
+                                Background="Transparent">
+                                <Button
+                                    Background="Transparent"
+                                    Command="{x:Static materialDesign:DialogHost.OpenDialogCommand}"
+                                    Content="{materialDesign:PackIcon Kind=Plus,
+                                                                      Size=22}"
+                                    Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+                                    Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
+                                <Button
+                                    Margin="0,5,0,0"
+                                    Background="Transparent"
+                                    Command="{Binding OnRefreshBreezemoonsCommand}"
+                                    Content="{materialDesign:PackIcon Kind=Refresh,
+                                                                      Size=22}"
+                                    Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+                                    Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
+                            </StackPanel>
                         </Grid>
 
                     </Border>
