@@ -21,7 +21,8 @@ namespace FishpiVS2026Plugin.ViewModels
         private const string CollectionName = "FishpiVS2026Plugin";
         private readonly string baseurl = "https://fishpi.cn";
 
-        private ObservableCollection<ChatRoomMessage> _messages = new ObservableCollection<ChatRoomMessage>();
+		#region DesignData
+		private ObservableCollection<ChatRoomMessage> _messages = new ObservableCollection<ChatRoomMessage>();
         public ObservableCollection<ChatRoomMessage> Messages
         {
             get => _messages;
@@ -113,16 +114,16 @@ namespace FishpiVS2026Plugin.ViewModels
             get => _refViewVisibility;
             set => SetProperty(ref _refViewVisibility, value);
         }
+		#endregion
 
-        public IAsyncRelayCommand OnLoadedCommand { get; }
+		#region Commands
+		public IAsyncRelayCommand OnLoadedCommand { get; }
 
         public IAsyncRelayCommand OnSendCommand { get; }
 
         public RelayCommand OnSettingsCommand { get; }
 
         public IAsyncRelayCommand OnSaveSettingsCommand { get; }
-
-        public IAsyncRelayCommand OnOpenEditCommand { get; }
 
         public RelayCommand OnCancelRefCommand { get; }
 
@@ -133,14 +134,14 @@ namespace FishpiVS2026Plugin.ViewModels
         public IAsyncRelayCommand OnRefreshBreezemoonsCommand { get; }
 
         public IAsyncRelayCommand OnPublishBreezemoonCommand { get; }
+		#endregion
 
-        public ChatRoomViewModel()
+		public ChatRoomViewModel()
         {
             OnLoadedCommand = new AsyncRelayCommand(OnLoadedAsync);
 			OnSendCommand = new AsyncRelayCommand(OnSendAsync);
             OnSettingsCommand = new RelayCommand(OnSettings);
             OnSaveSettingsCommand = new AsyncRelayCommand(OnSaveSettingsAsync);
-            OnOpenEditCommand = new AsyncRelayCommand(OnOpenEditAsync);
             OnCancelRefCommand = new RelayCommand(() => RefViewVisibility = Visibility.Collapsed);
             OnOpenRefCommand = new RelayCommand(OnOpenRef);
             OnCopyMsgCommand = new RelayCommand(() =>
@@ -283,29 +284,9 @@ namespace FishpiVS2026Plugin.ViewModels
             roomClient.OnMessageReceived += RoomClient_OnMessageReceived; ;
 
             //获取清风明月
-            Parameter[] parameters =
-            {
-                Parameter.CreateParameter("p",1, ParameterType.QueryString),
-                Parameter.CreateParameter("size",50, ParameterType.QueryString),
-            };
-
-            var response = await httpRestClient.GetAsync<BreezemoonRootResponse>("api/breezemoons", parameters);
-            if (response != null && response.IsSuccessful && response.Data != null)
-            {
-                foreach (var item in response.Data.Breezemoons)
-                {
-                    Breezemoons.Add(item);
-                }
-            }
+            await OnRefreshBreezemoonsAsync();
 
             await roomClient.StartAsync();
-
-            
-        }
-
-        private async Task OnOpenEditAsync()
-        {
-            
         }
 
         private void RoomClient_OnMessageReceived(ChatRoomMessage message)
