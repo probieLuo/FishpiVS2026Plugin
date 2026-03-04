@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace FishpiVS2026Plugin.Helpers
@@ -19,12 +21,13 @@ namespace FishpiVS2026Plugin.Helpers
 			// 配置 RestClient 选项
 			var options = new RestClientOptions(baseUrl)
 			{
-				Timeout = TimeSpan.FromSeconds(10),          // 设置超时时间
-				ThrowOnAnyError = false     // 不自动抛出异常，由我们自己处理
-			};
+				Timeout = TimeSpan.FromSeconds(10),
+				ThrowOnAnyError = false,
+				UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            };
 
 			_client = new RestClient(options);
-		}
+        }
 
 		/// <summary>
 		/// 添加全局请求头（所有请求都会携带）

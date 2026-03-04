@@ -5,12 +5,10 @@ using FishpiVS2026Plugin.Models;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Settings;
-using System;
+using RestSharp;
 using System.Collections.ObjectModel;
-using System.Runtime;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
 
 namespace FishpiVS2026Plugin.ViewModels
 {
@@ -20,11 +18,43 @@ namespace FishpiVS2026Plugin.ViewModels
         private HttpRestClient httpRestClient;
         private int messagesMax = 10000;
         private const string CollectionName = "FishpiVS2026Plugin";
+        private readonly string baseurl = "https://fishpi.cn";
+
         private ObservableCollection<ChatRoomMessage> _messages = new ObservableCollection<ChatRoomMessage>();
         public ObservableCollection<ChatRoomMessage> Messages
         {
             get => _messages;
             set => SetProperty(ref _messages, value); 
+        }
+
+        private ChatRoomMessage _selectedMessage;
+        public ChatRoomMessage SelectedMessage
+        {
+            get => _selectedMessage;
+            set => SetProperty(ref _selectedMessage, value);
+        }
+
+        private ObservableCollection<BreezemoonItem> _breezemoons = new ObservableCollection<BreezemoonItem>();
+        public ObservableCollection<BreezemoonItem> Breezemoons
+        {
+            get => _breezemoons;
+            set => SetProperty(ref _breezemoons, value);
+        }
+
+        private string _refUserName = "";
+
+        public string RefUserName
+        {
+            get => _refUserName;
+            set => SetProperty(ref _refUserName, value);
+        }
+
+        private string _refContent = "";
+
+        public string RefContent
+        {
+            get => _refContent;
+            set => SetProperty(ref _refContent, value);
         }
 
         private string _sendContent = "";
@@ -67,6 +97,14 @@ namespace FishpiVS2026Plugin.ViewModels
             set => SetProperty(ref _settingsViewVisibility, value);
         }
 
+        private Visibility _refViewVisibility = Visibility.Collapsed;
+
+        public Visibility RefViewVisibility
+        {
+            get => _refViewVisibility;
+            set => SetProperty(ref _refViewVisibility, value);
+        }
+
         public IAsyncRelayCommand OnLoadedCommand { get; }
 
         public IAsyncRelayCommand OnSendCommand { get; }
@@ -75,12 +113,38 @@ namespace FishpiVS2026Plugin.ViewModels
 
         public IAsyncRelayCommand OnSaveSettingsCommand { get; }
 
+        public IAsyncRelayCommand OnOpenEditCommand { get; }
+
+        public RelayCommand OnCancelRefCommand { get; }
+
+        public RelayCommand OnOpenRefCommand { get; }
+
+        public RelayCommand OnCopyMsgCommand { get; }
+        
+
         public ChatRoomViewModel()
         {
             OnLoadedCommand = new AsyncRelayCommand(OnLoadedAsync);
 			OnSendCommand = new AsyncRelayCommand(OnSendAsync);
             OnSettingsCommand = new RelayCommand(OnSettings);
             OnSaveSettingsCommand = new AsyncRelayCommand(OnSaveSettingsAsync);
+            OnOpenEditCommand = new AsyncRelayCommand(OnOpenEditAsync);
+            OnCancelRefCommand = new RelayCommand(() => RefViewVisibility = Visibility.Collapsed);
+            OnOpenRefCommand = new RelayCommand(OnOpenRef);
+            OnCopyMsgCommand = new RelayCommand(() =>
+            {
+                if (SelectedMessage != null)
+                {
+                    System.Windows.Clipboard.SetText(SelectedMessage.Md);
+                }
+            });
+        }
+
+        private void OnOpenRef()
+        {
+            RefViewVisibility = Visibility.Visible;
+            RefUserName = SelectedMessage?.UserName ?? "";
+            RefContent = SelectedMessage?.Md ?? "";
         }
 
         private void LoadSettings()
@@ -140,13 +204,28 @@ namespace FishpiVS2026Plugin.ViewModels
 
         private async Task OnSendAsync()
 		{
-            ChatRoomSendMessage msg = new ChatRoomSendMessage
+            if (RefViewVisibility!=Visibility.Visible)
             {
-                ApiKey = Apikey,
-                Client = "Other",
-                Content = SendContent
-            };
-            var response = await httpRestClient.PostAsync<ChatRoomSendMessage>("chat-room/send", msg);
+                ChatRoomSendMessage msg = new ChatRoomSendMessage
+                {
+                    ApiKey = Apikey,
+                    Client = "Other",
+                    Content = SendContent
+                };
+                var response = await httpRestClient.PostAsync<ChatRoomSendMessage>("chat-room/send", msg);
+            }
+            else
+            {
+                SendContent = SendContent + $"\n\n##### 引用 @{SelectedMessage.UserName} [↩]({baseurl}/cr#chatroom{SelectedMessage.OId} \"跳转至原消息\")  \n> {SelectedMessage.Md}\n";
+                ChatRoomSendMessage msg = new ChatRoomSendMessage
+                {
+                    ApiKey = Apikey,
+                    Client = "Other",
+                    Content = SendContent
+                };
+                var response = await httpRestClient.PostAsync<ChatRoomSendMessage>("chat-room/send", msg);
+                RefViewVisibility = Visibility.Collapsed;
+            }
             SendContent = "";
 		}
 
@@ -154,11 +233,48 @@ namespace FishpiVS2026Plugin.ViewModels
         {
             LoadSettings();
 
-            httpRestClient = new HttpRestClient("https://fishpi.cn/");
+            httpRestClient = new HttpRestClient(baseurl);
             roomClient = new ChatRoomClient(Domain, Apikey);
             roomClient.OnMessageReceived += RoomClient_OnMessageReceived; ;
 
+            //获取清风明月
+            Parameter[] parameters =
+            {
+                Parameter.CreateParameter("p",1, ParameterType.QueryString),
+                Parameter.CreateParameter("size",50, ParameterType.QueryString),
+            };
+
+            var response = await httpRestClient.GetAsync<BreezemoonRootResponse>("api/breezemoons", parameters);
+            if (response != null && response.IsSuccessful && response.Data != null)
+            {
+                foreach (var item in response.Data.Breezemoons)
+                {
+                    Breezemoons.Add(item);
+                }
+            }
+
             await roomClient.StartAsync();
+
+            
+        }
+
+        private async Task OnOpenEditAsync()
+        {
+            Breezemoons.Clear();
+            Parameter[] parameters =
+            {
+                Parameter.CreateParameter("p",1, ParameterType.QueryString),
+                Parameter.CreateParameter("size",50, ParameterType.QueryString),
+            };
+
+            var response = await httpRestClient.GetAsync<BreezemoonRootResponse>("api/breezemoons", parameters);
+            if (response != null && response.IsSuccessful && response.Data != null)
+            {
+                foreach (var item in response.Data.Breezemoons)
+                {
+                    Breezemoons.Add(item);
+                }
+            }
         }
 
         private void RoomClient_OnMessageReceived(ChatRoomMessage message)

@@ -46,10 +46,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Converters\BoolToHorizontalAlignmentConverter.cs" />
+    <Compile Include="Converters\BreezemoonContentConverter.cs" />
     <Compile Include="Helpers\AutoScrollBehavior.cs" />
     <Compile Include="Helpers\ChatRoomClient.cs" />
     <Compile Include="Helpers\HttpRestClient.cs" />
     <Compile Include="Helpers\LoadedCommandBehavior.cs" />
+    <Compile Include="Models\BreezemoonRootResponse.cs" />
     <Compile Include="Models\ChatRoomMessage.cs" />
     <Compile Include="Models\ChatRoomSendMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
