@@ -9,6 +9,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -118,22 +119,13 @@ namespace FishpiVS2026Plugin.ViewModels
             get => _messageTail;
             set => SetProperty(ref _messageTail, value);
         }
-        
 
-        private Visibility _chatViewVisibility = Visibility.Visible;
+        private string _shieldUsers = "";
 
-        public Visibility ChatViewVisibility
+        public string ShieldUsers
         {
-            get => _chatViewVisibility;
-            set => SetProperty(ref _chatViewVisibility, value);
-        }
-
-        private Visibility _settingsViewVisibility = Visibility.Hidden;
-
-        public Visibility SettingsViewVisibility
-        {
-            get => _settingsViewVisibility;
-            set => SetProperty(ref _settingsViewVisibility, value);
+            get => _shieldUsers;
+            set => SetProperty(ref _shieldUsers, value);
         }
 
         private Visibility _refViewVisibility = Visibility.Collapsed;
@@ -167,6 +159,8 @@ namespace FishpiVS2026Plugin.ViewModels
         public IAsyncRelayCommand OnNextPageBreezemoonsCommand { get; }
 
         public RelayCommand OnCopyBreezemoonCommand { get; }
+
+        public IAsyncRelayCommand OnSaveOtherSettingsCommand {  get; }
         #endregion
 
         public ChatRoomViewModel()
@@ -174,6 +168,7 @@ namespace FishpiVS2026Plugin.ViewModels
             OnLoadedCommand = new AsyncRelayCommand(OnLoadedAsync);
 			OnSendCommand = new AsyncRelayCommand(OnSendAsync);
             OnSaveSettingsCommand = new AsyncRelayCommand(OnSaveSettingsAsync);
+            OnSaveOtherSettingsCommand = new AsyncRelayCommand(OnSaveOtherSettingsAsync);
             OnCancelRefCommand = new RelayCommand(() => RefViewVisibility = Visibility.Collapsed);
             OnOpenRefCommand = new RelayCommand(OnOpenRef);
             OnCopyMsgCommand = new RelayCommand(() =>
@@ -185,15 +180,35 @@ namespace FishpiVS2026Plugin.ViewModels
             });
             OnCopyBreezemoonCommand = new RelayCommand(() =>
             {
-                if (SelectedMessage != null)
+                if (SelectedBreezemoon != null)
                 {
-                    System.Windows.Clipboard.SetText(SelectedBreezemoon.BreezemoonContent);
+                    string innerText = "";
+                    int startIndex = SelectedBreezemoon.BreezemoonContent.IndexOf("<p>", StringComparison.OrdinalIgnoreCase);
+                    int endIndex = SelectedBreezemoon.BreezemoonContent.IndexOf("</p>", StringComparison.OrdinalIgnoreCase);
+
+                    if (startIndex == -1 || endIndex == -1 || startIndex >= endIndex)
+                        innerText = SelectedBreezemoon.BreezemoonContent;
+
+                    startIndex += 3;
+                    innerText = SelectedBreezemoon.BreezemoonContent.Substring(startIndex, endIndex - startIndex);
+                    System.Windows.Clipboard.SetText(innerText);
                 }
             });
             OnRefreshBreezemoonsCommand = new AsyncRelayCommand(OnRefreshBreezemoonsAsync);
             OnPublishBreezemoonCommand = new AsyncRelayCommand(OnPublishBreezemoonAsync);
             OnPreviousPageBreezemoonsCommand = new AsyncRelayCommand(OnPreviousPageBreezemoonsAsync);
             OnNextPageBreezemoonsCommand = new AsyncRelayCommand(OnNextPageBreezemoonsAsync);
+        }
+
+        private async Task OnSaveOtherSettingsAsync()
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var settingsManager = new ShellSettingsManager(ServiceProvider.GlobalProvider);
+            var userSettingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
+
+            userSettingsStore.SetString(CollectionName, "MessageTail", MessageTail);
+            userSettingsStore.SetString(CollectionName, "ShieldUsers", ShieldUsers);
         }
 
         private async Task OnNextPageBreezemoonsAsync()
@@ -278,6 +293,8 @@ namespace FishpiVS2026Plugin.ViewModels
             }
             Domain = userSettingsStore.GetString(CollectionName, "Domain","");
             Apikey = userSettingsStore.GetString(CollectionName, "Apikey","");
+            MessageTail = userSettingsStore.GetString(CollectionName, "MessageTail", "");
+            ShieldUsers = userSettingsStore.GetString(CollectionName, "ShieldUsers", "");
         }
 
         private async Task OnSaveSettingsAsync()
@@ -299,16 +316,14 @@ namespace FishpiVS2026Plugin.ViewModels
             roomClient = new ChatRoomClient(Domain, Apikey);
             roomClient.OnMessageReceived += RoomClient_OnMessageReceived;
             _ = roomClient.StartAsync();
-
-            ChatViewVisibility = Visibility.Visible;
-            SettingsViewVisibility = Visibility.Hidden;
         }
 
         private async Task OnSendAsync()
 		{
+            string Content = "";
             if(!string.IsNullOrWhiteSpace(MessageTail))
             {
-                SendContent = SendContent + "\t\n> " + MessageTail;
+                Content = SendContent + "\t\n> " + MessageTail;
             }
             if (RefViewVisibility!=Visibility.Visible)
             {
@@ -316,18 +331,18 @@ namespace FishpiVS2026Plugin.ViewModels
                 {
                     ApiKey = Apikey,
                     Client = "Other",
-                    Content = SendContent
+                    Content = Content
                 };
                 var response = await httpRestClient.PostAsync<ChatRoomSendMessage>("chat-room/send", msg);
             }
             else
             {
-                SendContent = SendContent + $"\n\n##### 引用 @{SelectedMessage.UserName} [↩]({baseurl}/cr#chatroom{SelectedMessage.OId} \"跳转至原消息\")  \n> {SelectedMessage.Md}\n";
+                Content = SendContent + $"\n\n##### 引用 @{SelectedMessage.UserName} [↩]({baseurl}/cr#chatroom{SelectedMessage.OId} \"跳转至原消息\")  \n> {SelectedMessage.Md}\n";
                 ChatRoomSendMessage msg = new ChatRoomSendMessage
                 {
                     ApiKey = Apikey,
                     Client = "Other",
-                    Content = SendContent
+                    Content = Content
                 };
                 var response = await httpRestClient.PostAsync<ChatRoomSendMessage>("chat-room/send", msg);
                 RefViewVisibility = Visibility.Collapsed;
@@ -356,6 +371,23 @@ namespace FishpiVS2026Plugin.ViewModels
                 Messages.RemoveAt(0);
 
             }
+
+            #region 屏蔽用户
+            if (!string.IsNullOrEmpty(ShieldUsers))
+            {
+                string[] shieldUsers = ShieldUsers.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                if (shieldUsers != null && shieldUsers.Length > 0)
+                {
+                    if (shieldUsers.Contains(message.UserName))
+                    {
+                        return;
+                    }
+                }
+            }
+            #endregion
+
+            if (string.IsNullOrEmpty(message.Md))
+                return;
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 Messages.Add(message);

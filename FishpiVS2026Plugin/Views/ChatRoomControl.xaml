@@ -96,6 +96,20 @@
                         </ListView.ItemTemplate>
                     </ListView>
 
+                    <Button
+                        x:Name="ArrowBottomButton"
+                        Width="24"
+                        Height="24"
+                        Margin="10"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Background="Transparent"
+                        Click="ArrowBottomButton_Click"
+                        Content="{materialDesign:PackIcon Kind=ArrowBottom,
+                                                          Size=18}"
+                        Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+                        Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
+
                     <StackPanel Grid.Row="1" Margin="5">
                         <Grid Margin="5" Visibility="{Binding RefViewVisibility}">
                             <TextBlock TextWrapping="Wrap">
@@ -323,6 +337,26 @@
                                 Background="Transparent"
                                 Style="{StaticResource MaterialDesignFilledTextBox}"
                                 Text="{Binding MessageTail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox
+                                Height="100"
+                                Margin="5"
+                                materialDesign:HintAssist.Hint="屏蔽机器人, 多条请换行"
+                                materialDesign:HintAssist.IsFloating="False"
+                                materialDesign:TextFieldAssist.HasClearButton="True"
+                                materialDesign:TextFieldAssist.HasOutlinedTextField="True"
+                                AcceptsReturn="True"
+                                Background="Transparent"
+                                Style="{StaticResource MaterialDesignFilledTextBox}"
+                                Text="{Binding ShieldUsers, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextWrapping="Wrap" />
+
+                            <Button
+                                Margin="5"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
+                                Command="{Binding OnSaveOtherSettingsCommand}"
+                                Content="save"
+                                Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}" />
                         </StackPanel>
                     </TabItem>
                 </TabControl>

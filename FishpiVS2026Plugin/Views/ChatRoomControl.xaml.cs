@@ -90,5 +90,15 @@ namespace FishpiVS2026Plugin.Views
 			ReleaseDialogHost.IsOpen = false;
             ViewModel.OnPublishBreezemoonCommand.Execute(null);
         }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ArrowBottomButton_Click(object sender, RoutedEventArgs e)
+        {
+			ChatListView.ScrollIntoView(ChatListView.Items[ChatListView.Items.Count - 1]);
+        }
     }
 }
