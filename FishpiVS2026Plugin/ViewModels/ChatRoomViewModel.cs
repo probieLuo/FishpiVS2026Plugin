@@ -7,9 +7,11 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Settings;
 using RestSharp;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace FishpiVS2026Plugin.ViewModels
 {
@@ -20,9 +22,20 @@ namespace FishpiVS2026Plugin.ViewModels
         private int messagesMax = 10000;
         private const string CollectionName = "FishpiVS2026Plugin";
         private readonly string baseurl = "https://fishpi.cn";
+        private int _currentChatRoomPage = 1;
+        private int CurrentBreezemoonsPage
+        {
+            get { return _currentChatRoomPage; }
+            set
+            {
+                if(value < 1) return;
+                _currentChatRoomPage = value;
+            }
+        }
+        private int sizePerPage = 100;
 
-		#region DesignData
-		private ObservableCollection<ChatRoomMessage> _messages = new ObservableCollection<ChatRoomMessage>();
+        #region DesignData
+        private ObservableCollection<ChatRoomMessage> _messages = new ObservableCollection<ChatRoomMessage>();
         public ObservableCollection<ChatRoomMessage> Messages
         {
             get => _messages;
@@ -41,6 +54,13 @@ namespace FishpiVS2026Plugin.ViewModels
         {
             get => _breezemoons;
             set => SetProperty(ref _breezemoons, value);
+        }
+
+        private BreezemoonItem _selectedBreezemoon;
+        public BreezemoonItem SelectedBreezemoon
+        {
+            get => _selectedBreezemoon;
+            set => SetProperty(ref _selectedBreezemoon, value);
         }
 
         private string _refUserName = "";
@@ -91,6 +111,15 @@ namespace FishpiVS2026Plugin.ViewModels
             set => SetProperty(ref _domain, value);
         }
 
+        private string _messageTail = "";
+
+        public string MessageTail
+        {
+            get => _messageTail;
+            set => SetProperty(ref _messageTail, value);
+        }
+        
+
         private Visibility _chatViewVisibility = Visibility.Visible;
 
         public Visibility ChatViewVisibility
@@ -121,8 +150,6 @@ namespace FishpiVS2026Plugin.ViewModels
 
         public IAsyncRelayCommand OnSendCommand { get; }
 
-        public RelayCommand OnSettingsCommand { get; }
-
         public IAsyncRelayCommand OnSaveSettingsCommand { get; }
 
         public RelayCommand OnCancelRefCommand { get; }
@@ -134,13 +161,18 @@ namespace FishpiVS2026Plugin.ViewModels
         public IAsyncRelayCommand OnRefreshBreezemoonsCommand { get; }
 
         public IAsyncRelayCommand OnPublishBreezemoonCommand { get; }
-		#endregion
 
-		public ChatRoomViewModel()
+        public IAsyncRelayCommand OnPreviousPageBreezemoonsCommand { get; }
+
+        public IAsyncRelayCommand OnNextPageBreezemoonsCommand { get; }
+
+        public RelayCommand OnCopyBreezemoonCommand { get; }
+        #endregion
+
+        public ChatRoomViewModel()
         {
             OnLoadedCommand = new AsyncRelayCommand(OnLoadedAsync);
 			OnSendCommand = new AsyncRelayCommand(OnSendAsync);
-            OnSettingsCommand = new RelayCommand(OnSettings);
             OnSaveSettingsCommand = new AsyncRelayCommand(OnSaveSettingsAsync);
             OnCancelRefCommand = new RelayCommand(() => RefViewVisibility = Visibility.Collapsed);
             OnOpenRefCommand = new RelayCommand(OnOpenRef);
@@ -151,8 +183,45 @@ namespace FishpiVS2026Plugin.ViewModels
                     System.Windows.Clipboard.SetText(SelectedMessage.Md);
                 }
             });
+            OnCopyBreezemoonCommand = new RelayCommand(() =>
+            {
+                if (SelectedMessage != null)
+                {
+                    System.Windows.Clipboard.SetText(SelectedBreezemoon.BreezemoonContent);
+                }
+            });
             OnRefreshBreezemoonsCommand = new AsyncRelayCommand(OnRefreshBreezemoonsAsync);
             OnPublishBreezemoonCommand = new AsyncRelayCommand(OnPublishBreezemoonAsync);
+            OnPreviousPageBreezemoonsCommand = new AsyncRelayCommand(OnPreviousPageBreezemoonsAsync);
+            OnNextPageBreezemoonsCommand = new AsyncRelayCommand(OnNextPageBreezemoonsAsync);
+        }
+
+        private async Task OnNextPageBreezemoonsAsync()
+        {
+            var list = await GetBreezemoonsAsync(CurrentBreezemoonsPage + 1, sizePerPage);
+            if (list != null && list.Count > 0)
+            {
+                CurrentBreezemoonsPage++;
+                Breezemoons.Clear();
+                foreach (var item in list)
+                {
+                    Breezemoons.Add(item);
+                }
+            }
+        }
+
+        private async Task OnPreviousPageBreezemoonsAsync()
+        {
+            var list = await GetBreezemoonsAsync(CurrentBreezemoonsPage - 1, sizePerPage);
+            if (list != null && list.Count > 0)
+            {
+                CurrentBreezemoonsPage--;
+                Breezemoons.Clear();
+                foreach (var item in list)
+                {
+                    Breezemoons.Add(item);
+                }
+            }
         }
 
         private async Task OnPublishBreezemoonAsync()
@@ -172,8 +241,8 @@ namespace FishpiVS2026Plugin.ViewModels
             Breezemoons.Clear();
             Parameter[] parameters =
             {
-                Parameter.CreateParameter("p",1, ParameterType.QueryString),
-                Parameter.CreateParameter("size",50, ParameterType.QueryString),
+                Parameter.CreateParameter("p", 1, ParameterType.QueryString),
+                Parameter.CreateParameter("size", sizePerPage, ParameterType.QueryString),
             };
 
             var response = await httpRestClient.GetAsync<BreezemoonRootResponse>("api/breezemoons", parameters);
@@ -183,6 +252,7 @@ namespace FishpiVS2026Plugin.ViewModels
                 {
                     Breezemoons.Add(item);
                 }
+                CurrentBreezemoonsPage = 1;
             }
         }
 
@@ -234,22 +304,12 @@ namespace FishpiVS2026Plugin.ViewModels
             SettingsViewVisibility = Visibility.Hidden;
         }
 
-        private void OnSettings()
-        {
-            if (ChatViewVisibility == Visibility.Visible)
-            {
-                ChatViewVisibility = Visibility.Hidden;
-                SettingsViewVisibility = Visibility.Visible;
-            }
-            else
-            {
-                ChatViewVisibility = Visibility.Visible;
-                SettingsViewVisibility = Visibility.Hidden;
-            }
-        }
-
         private async Task OnSendAsync()
 		{
+            if(!string.IsNullOrWhiteSpace(MessageTail))
+            {
+                SendContent = SendContent + "\t\n> " + MessageTail;
+            }
             if (RefViewVisibility!=Visibility.Visible)
             {
                 ChatRoomSendMessage msg = new ChatRoomSendMessage
@@ -300,6 +360,22 @@ namespace FishpiVS2026Plugin.ViewModels
             {
                 Messages.Add(message);
             });
+        }
+
+        public async Task<List<BreezemoonItem>> GetBreezemoonsAsync(int page,int size = 50)
+        {
+            Parameter[] parameters =
+            {
+                Parameter.CreateParameter("p", page, ParameterType.QueryString),
+                Parameter.CreateParameter("size", size, ParameterType.QueryString),
+            };
+
+            var response = await httpRestClient.GetAsync<BreezemoonRootResponse>("api/breezemoons", parameters);
+            if (response != null && response.IsSuccessful && response.Data != null)
+            {
+                return response.Data.Breezemoons;
+            }
+            return null;
         }
     }
 }

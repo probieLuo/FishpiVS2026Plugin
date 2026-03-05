@@ -189,14 +189,15 @@
                                 Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
                                 ItemsSource="{Binding Breezemoons}"
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                SelectedItem="{Binding SelectedBreezemoon}">
                                 <ListView.ContextMenu>
                                     <ContextMenu
                                         Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
                                         BorderThickness="0.5"
                                         Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
                                         Style="{StaticResource MaterialDesignMenu}">
-                                        <MenuItem Header="复制" />
+                                        <MenuItem Command="{Binding OnCopyBreezemoonCommand}" Header="复制" />
                                     </ContextMenu>
                                 </ListView.ContextMenu>
                                 <ListView.ItemsPanel>
@@ -230,23 +231,47 @@
                             </ListView>
 
                             <StackPanel
-                                Margin="40"
+                                Margin="20"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Bottom"
                                 Background="Transparent">
                                 <Button
+                                    Width="24"
+                                    Height="24"
                                     Background="Transparent"
                                     Command="{x:Static materialDesign:DialogHost.OpenDialogCommand}"
                                     Content="{materialDesign:PackIcon Kind=Plus,
-                                                                      Size=22}"
+                                                                      Size=18}"
                                     Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
                                     Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
                                 <Button
-                                    Margin="0,5,0,0"
+                                    Width="24"
+                                    Height="24"
+                                    Margin="0,2,0,0"
                                     Background="Transparent"
                                     Command="{Binding OnRefreshBreezemoonsCommand}"
                                     Content="{materialDesign:PackIcon Kind=Refresh,
-                                                                      Size=22}"
+                                                                      Size=18}"
+                                    Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+                                    Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
+                                <Button
+                                    Width="24"
+                                    Height="24"
+                                    Margin="0,2,0,0"
+                                    Background="Transparent"
+                                    Command="{Binding OnPreviousPageBreezemoonsCommand}"
+                                    Content="{materialDesign:PackIcon Kind=FirstPage,
+                                                                      Size=18}"
+                                    Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+                                    Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
+                                <Button
+                                    Width="24"
+                                    Height="24"
+                                    Margin="0,2,0,0"
+                                    Background="Transparent"
+                                    Command="{Binding OnNextPageBreezemoonsCommand}"
+                                    Content="{materialDesign:PackIcon Kind=LastPage,
+                                                                      Size=18}"
                                     Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
                                     Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
                             </StackPanel>
@@ -257,33 +282,51 @@
             </TabItem>
 
             <TabItem Header="set">
-                <StackPanel>
-                    <TextBox
-                        Margin="5"
-                        materialDesign:HintAssist.Hint="Domain"
-                        materialDesign:HintAssist.IsFloating="False"
-                        materialDesign:TextFieldAssist.HasClearButton="True"
-                        materialDesign:TextFieldAssist.HasOutlinedTextField="True"
-                        Background="Transparent"
-                        Style="{StaticResource MaterialDesignFilledTextBox}"
-                        Text="{Binding Domain, Mode=TwoWay}" />
-                    <PasswordBox
-                        Margin="5"
-                        materialDesign:HintAssist.Hint="Apikey"
-                        materialDesign:HintAssist.IsFloating="False"
-                        materialDesign:PasswordBoxAssist.Password="{Binding Apikey, Mode=TwoWay}"
-                        materialDesign:TextFieldAssist.HasClearButton="True"
-                        materialDesign:TextFieldAssist.HasOutlinedTextField="True"
-                        Background="Transparent"
-                        Style="{StaticResource MaterialDesignFilledRevealPasswordBox}" />
-                    <Button
-                        Margin="5"
-                        HorizontalAlignment="Left"
-                        Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
-                        Command="{Binding OnSaveSettingsCommand}"
-                        Content="save"
-                        Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}" />
-                </StackPanel>
+                <TabControl TabStripPlacement="Left">
+                    <TabItem Header="API">
+                        <StackPanel>
+                            <TextBox
+                                Margin="5"
+                                materialDesign:HintAssist.Hint="Domain"
+                                materialDesign:HintAssist.IsFloating="False"
+                                materialDesign:TextFieldAssist.HasClearButton="True"
+                                materialDesign:TextFieldAssist.HasOutlinedTextField="True"
+                                Background="Transparent"
+                                Style="{StaticResource MaterialDesignFilledTextBox}"
+                                Text="{Binding Domain, Mode=TwoWay}" />
+                            <PasswordBox
+                                Margin="5"
+                                materialDesign:HintAssist.Hint="Apikey"
+                                materialDesign:HintAssist.IsFloating="False"
+                                materialDesign:PasswordBoxAssist.Password="{Binding Apikey, Mode=TwoWay}"
+                                materialDesign:TextFieldAssist.HasClearButton="True"
+                                materialDesign:TextFieldAssist.HasOutlinedTextField="True"
+                                Background="Transparent"
+                                Style="{StaticResource MaterialDesignFilledRevealPasswordBox}" />
+                            <Button
+                                Margin="5"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
+                                Command="{Binding OnSaveSettingsCommand}"
+                                Content="save"
+                                Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}" />
+                        </StackPanel>
+                    </TabItem>
+                    <TabItem Header="其他">
+                        <StackPanel>
+                            <TextBox
+                                Margin="5"
+                                materialDesign:HintAssist.Hint="小尾巴"
+                                materialDesign:HintAssist.IsFloating="False"
+                                materialDesign:TextFieldAssist.HasClearButton="True"
+                                materialDesign:TextFieldAssist.HasOutlinedTextField="True"
+                                Background="Transparent"
+                                Style="{StaticResource MaterialDesignFilledTextBox}"
+                                Text="{Binding MessageTail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </TabItem>
+                </TabControl>
+
             </TabItem>
         </TabControl>
     </Grid>
