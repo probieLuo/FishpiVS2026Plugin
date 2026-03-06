@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace FishpiVS2026Plugin.ViewModels
 {
@@ -134,18 +135,10 @@ namespace FishpiVS2026Plugin.ViewModels
             get => _refViewVisibility;
             set => SetProperty(ref _refViewVisibility, value);
         }
+		#endregion
 
-        private double _activity = 0;
-
-        public double Activity
-        {
-            get => _activity;
-            set => SetProperty(ref _activity, value);
-        }
-        #endregion
-
-        #region Commands
-        public IAsyncRelayCommand OnLoadedCommand { get; }
+		#region Commands
+		public IAsyncRelayCommand OnLoadedCommand { get; }
 
         public IAsyncRelayCommand OnSendCommand { get; }
 
@@ -168,10 +161,6 @@ namespace FishpiVS2026Plugin.ViewModels
         public RelayCommand OnCopyBreezemoonCommand { get; }
 
         public IAsyncRelayCommand OnSaveOtherSettingsCommand {  get; }
-
-        public IAsyncRelayCommand OnGetActivityCommand { get; }
-
-        public IAsyncRelayCommand OnGetActivityRewardCommand { get; }
         #endregion
 
         public ChatRoomViewModel()
@@ -209,30 +198,6 @@ namespace FishpiVS2026Plugin.ViewModels
             OnPublishBreezemoonCommand = new AsyncRelayCommand(OnPublishBreezemoonAsync);
             OnPreviousPageBreezemoonsCommand = new AsyncRelayCommand(OnPreviousPageBreezemoonsAsync);
             OnNextPageBreezemoonsCommand = new AsyncRelayCommand(OnNextPageBreezemoonsAsync);
-            OnGetActivityCommand = new AsyncRelayCommand(OnGetActivityAsync);
-            OnGetActivityRewardCommand = new AsyncRelayCommand(OnGetActivityRewardAsync);
-        }
-
-        private async Task OnGetActivityAsync()
-        {
-            RestSharp.Parameter[] parameters =
-            {
-                RestSharp.Parameter.CreateParameter("apiKey", Apikey, ParameterType.QueryString),
-            };
-            var response = await httpRestClient.GetAsync<LivenessResponse>("/user/liveness", parameters);
-            if(response != null && response.IsSuccessful && response.Data != null)
-            {
-                Activity = Math.Round(response.Data.Liveness,0);
-            }
-        }
-
-        private async Task OnGetActivityRewardAsync()
-        {
-            RestSharp.Parameter[] parameters =
-            {
-                RestSharp.Parameter.CreateParameter("apiKey", Apikey, ParameterType.QueryString),
-            };
-            var response = await httpRestClient.GetAsync<LivenessrewardResponse>("/activity/yesterday-liveness-reward-api", parameters);
         }
 
         private async Task OnSaveOtherSettingsAsync()
@@ -395,8 +360,6 @@ namespace FishpiVS2026Plugin.ViewModels
 
             //获取清风明月
             await OnRefreshBreezemoonsAsync();
-
-            await OnGetActivityAsync();
 
             await roomClient.StartAsync();
         }
