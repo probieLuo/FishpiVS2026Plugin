@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="FishpiVS2026Plugin.3a86116a-59f4-4c3e-a71a-dc161012381e" Version="1.0" Language="en-US" Publisher="Company" />
-        <DisplayName>FishpiVS2026Plugin</DisplayName>
-        <Description>Empty VSIX Project.</Description>
+        <Identity Id="fishpivs3a86116a59f44c3ea71adc161012381e" Version="1.2" Language="zh-CN" Publisher="fishpi-csharp" />
+        <DisplayName>Fishpi</DisplayName>
+        <Description xml:space="preserve">在摸鱼派，你可以畅所欲言，聊技术、家常、时事，无论是发帖探讨还是聊天室在线聊天</Description>
     </Metadata>
     <Installation>
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, )">
