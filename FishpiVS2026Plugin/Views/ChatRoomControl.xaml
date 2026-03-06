@@ -96,19 +96,49 @@
                         </ListView.ItemTemplate>
                     </ListView>
 
-                    <Button
-                        x:Name="ArrowBottomButton"
-                        Width="24"
-                        Height="24"
+                    <StackPanel
                         Margin="10"
                         HorizontalAlignment="Right"
-                        VerticalAlignment="Bottom"
-                        Background="Transparent"
-                        Click="ArrowBottomButton_Click"
-                        Content="{materialDesign:PackIcon Kind=ArrowBottom,
-                                                          Size=18}"
-                        Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
-                        Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
+                        VerticalAlignment="Bottom">
+
+                        <Button
+                            Width="24"
+                            Height="24"
+                            Margin="0,0,0,5"
+                            Background="Transparent"
+                            Command="{Binding OnGetActivityCommand}"
+                            Content="{Binding Activity}"
+                            FontSize="12"
+                            Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+                            Style="{StaticResource MaterialDesignFloatingActionButton}"
+                            ToolTip="活跃度/获取活跃度" />
+
+                        <Button
+                            Width="24"
+                            Height="24"
+                            Margin="0,0,0,5"
+                            materialDesign:ButtonProgressAssist.IndicatorBackground="Transparent"
+                            materialDesign:ButtonProgressAssist.IsIndicatorVisible="False"
+                            Background="Transparent"
+                            Command="{Binding OnGetActivityRewardCommand}"
+                            Content="{materialDesign:PackIcon Kind=Scent,
+                                                              Size=18}"
+                            FontSize="8"
+                            Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+                            Style="{StaticResource MaterialDesignFloatingActionButton}"
+                            ToolTip="领取活跃奖励" />
+
+                        <Button
+                            x:Name="ArrowBottomButton"
+                            Width="24"
+                            Height="24"
+                            Background="Transparent"
+                            Click="ArrowBottomButton_Click"
+                            Content="{materialDesign:PackIcon Kind=ArrowBottom,
+                                                              Size=18}"
+                            Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+                            Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
+                    </StackPanel>
 
                     <StackPanel Grid.Row="1" Margin="5">
                         <Grid Margin="5" Visibility="{Binding RefViewVisibility}">

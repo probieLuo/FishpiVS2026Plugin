@@ -55,6 +55,7 @@
     <Compile Include="Models\BreezemoonRootResponse.cs" />
     <Compile Include="Models\ChatRoomMessage.cs" />
     <Compile Include="Models\ChatRoomSendMessage.cs" />
+    <Compile Include="Models\LivenessResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FishpiVS2026PluginPackage.cs" />
     <Compile Include="ViewModels\ChatRoomViewModel.cs" />
