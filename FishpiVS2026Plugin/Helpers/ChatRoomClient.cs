@@ -25,6 +25,7 @@ namespace FishpiVS2026Plugin.Helpers
 
         public async Task StartAsync()
         {
+            /*
             while (true)
             {
                 try
@@ -39,6 +40,15 @@ namespace FishpiVS2026Plugin.Helpers
                 // 连接关闭/出错后，等待并重连
                 Console.WriteLine($"将在 {_reconnectDelayMs / 1000} 秒后尝试重连...");
                 await Task.Delay(_reconnectDelayMs);
+            }
+            */
+            try
+            {
+                await ConnectAndHandleEventsAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"客户端异常：{ex.Message}");
             }
         }
 

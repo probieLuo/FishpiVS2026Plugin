@@ -98,7 +98,10 @@ namespace FishpiVS2026Plugin.Views
 
         private void ArrowBottomButton_Click(object sender, RoutedEventArgs e)
         {
-			ChatListView.ScrollIntoView(ChatListView.Items[ChatListView.Items.Count - 1]);
+			if (ChatListView.Items != null && ChatListView.Items.Count > 0)
+			{
+                ChatListView.ScrollIntoView(ChatListView.Items[ChatListView.Items.Count - 1]);
+            }
         }
     }
 }

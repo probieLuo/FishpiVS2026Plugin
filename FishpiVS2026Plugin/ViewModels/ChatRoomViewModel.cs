@@ -334,6 +334,14 @@ namespace FishpiVS2026Plugin.ViewModels
 
         private async Task OnSaveSettingsAsync()
         {
+            if (Domain == null )
+            {
+                Domain = "";
+            }
+            if (Apikey == null)
+            {
+                Apikey = "";
+            }
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var settingsManager = new ShellSettingsManager(ServiceProvider.GlobalProvider);
