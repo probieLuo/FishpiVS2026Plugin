@@ -14,7 +14,7 @@
 
 1. 访问 Releases 页面下载最新的 `.vsix` 文件。
 2. 安装前请先关闭 Visual Studio。
-3. 双击 `FishpiVS2026Plugin.vsix` 进行安装。
+3. 执行 `FishpiVS2026Plugin.vsix` 进行安装。
 
 **配置**
 
@@ -39,12 +39,14 @@
 - [ ] ~markdown支持，大工程！因为目前wpf没有很好的支持markdown的包，有一个Markdig新出的，不过还没用过~
 - [ ] 撤回消息
 - [ ] 收发红包
-- [ ] 领取活跃奖励
-- [ ] 查看活跃度
+- [x] 领取活跃奖励
+- [x] 查看活跃度
 - [x] 查看发布清风明月
 - [ ] 其他摸鱼小功能...
 
 
 效果展示~
 
-![image.png](./resources/image-3.png)
+![效果png](./resources/屏幕截图2026-03-09161602.png)
+
+![效果gif](./resources/屏幕录制2026-03-09161012.gif)
