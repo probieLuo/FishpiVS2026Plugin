@@ -73,7 +73,10 @@
 
                         <ListView.ItemTemplate>
                             <DataTemplate DataType="{x:Type models:ChatRoomMessage}">
-                                <Grid Margin="0">
+                                <Border
+                                    Margin="0"
+                                    BorderBrush="{DynamicResource {x:Static vsshell:VsBrushes.DebuggerDataTipInactiveSeparatorKey}}"
+                                    BorderThickness="0,0,0,3">
 
                                     <StackPanel Margin="5,0,0,0">
                                         <TextBlock FontSize="12" FontWeight="Bold">
@@ -91,7 +94,7 @@
                                             TextWrapping="Wrap" />
 
                                     </StackPanel>
-                                </Grid>
+                                </Border>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
