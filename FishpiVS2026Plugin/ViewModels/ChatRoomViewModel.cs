@@ -19,7 +19,7 @@ namespace FishpiVS2026Plugin.ViewModels
     {
         private ChatRoomClient roomClient;
         private HttpRestClient httpRestClient;
-        private int messagesMax = 10000;
+        private int messagesMax = 100000;
         private const string CollectionName = "FishpiVS2026Plugin";
         private readonly string baseurl = "https://fishpi.cn";
         private int _currentChatRoomPage = 1;
@@ -413,8 +413,7 @@ namespace FishpiVS2026Plugin.ViewModels
         {
             if (Messages.Count > messagesMax)
             {
-                Messages.RemoveAt(0);
-
+                Messages.Clear();
             }
 
             #region 屏蔽用户
